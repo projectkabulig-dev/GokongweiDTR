@@ -77,6 +77,14 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
 #aTable th{color:var(--muted);font-weight:600}
 .filters{display:grid;grid-template-columns:2fr 1fr;gap:10px}
 @media(max-width:520px){.filters{grid-template-columns:1fr}}
+.step{display:none}
+.step.active{display:block}
+.progress{display:flex;gap:6px;margin:0 0 6px}
+.progress i{flex:1;height:6px;border-radius:99px;background:#cfdde2}
+.progress i.on{background:var(--primary)}
+.stepinfo{font-size:.85rem;color:var(--muted);margin:0 0 12px;font-weight:600}
+.nav{justify-content:space-between}
+.nav .spacer{flex:1}
 #batch{display:none}
 .foot{text-align:center;font-size:.85rem;margin-top:8px}
 @media print{
@@ -104,7 +112,9 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
 <main>
   <!-- STEP 1: FORM -->
   <form id="form" novalidate>
-    <div class="card">
+    <div class="progress" id="progress"><i></i><i></i><i></i><i></i></div>
+    <p class="stepinfo" id="stepInfo"></p>
+    <div class="card step active" data-step="1">
       <h2>Your attendance</h2>
       <label for="name">Full name</label>
       <input id="name" type="text" placeholder="e.g., Juan D. Dela Cruz" autocomplete="name">
@@ -119,8 +129,8 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
       <p class="hint">Enter the actual time you joined and left the orientation.</p>
     </div>
 
-    <div class="card">
-      <h2>Quick questions</h2>
+    <div class="card step" data-step="2">
+      <h2>Your GBF Class Builder account</h2>
 
       <div class="q"><p>Do you have a GBF Class Builder account?</p>
         <div class="opts"><label><input type="radio" name="hasAccount" value="Yes">Yes</label><label><input type="radio" name="hasAccount" value="No">No</label></div></div>
@@ -140,6 +150,10 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
       <div class="q"><p>Are you willing to cascade what you learned?</p>
         <div class="opts"><label><input type="radio" name="willCascade" value="Yes">Yes</label><label><input type="radio" name="willCascade" value="No">No</label></div></div>
 
+    </div>
+
+    <div class="card step" data-step="3">
+      <h2>How you watched</h2>
       <div class="q"><p>How many in your school watched the orientation?</p>
         <input id="viewers" type="number" min="1" inputmode="numeric" placeholder="Number of viewers"></div>
 
@@ -158,7 +172,7 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
 
     </div>
 
-    <div class="card">
+    <div class="card step" data-step="4">
       <h2>Your signature</h2>
       <p class="hint" style="margin:0 0 8px">Sign inside the box using your finger or mouse, or upload a photo of your signature. It will appear on your DTR.</p>
       <div class="sigpad-wrap"><canvas id="sigPad" width="600" height="200"></canvas></div>
@@ -166,8 +180,14 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
         <button type="button" class="btn alt" id="sigClear">Clear signature</button>
         <label class="btn alt" style="margin:0;cursor:pointer;display:inline-block">Upload signature photo<input id="sigFile" type="file" accept="image/*" hidden></label>
       </div>
-      <div class="err" id="err"></div>
-      <div class="actions"><button class="btn gold" id="submitBtn" type="submit">Submit and generate my DTR</button></div>
+    </div>
+
+    <div class="err" id="err"></div>
+    <div class="actions nav" id="nav">
+      <button type="button" class="btn alt" id="backBtn">Back</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="nextBtn">Next</button>
+      <button class="btn gold hidden" id="submitBtn" type="submit">Submit and generate my DTR</button>
     </div>
   </form>
 
@@ -354,15 +374,8 @@ function showErr(msg){ const e = $("err"); e.textContent = msg; e.style.display 
 $("form").addEventListener("submit", async ev => {
   ev.preventDefault(); showErr("");
   const name = $("name").value.trim(), school = $("school").value.trim(), date = $("date").value, t1 = $("t1").value, t2 = $("t2").value;
-  if (!name || !school || !date || !t1 || !t2) return showErr("Please complete your name, school, date, and time started and ended.");
-  if (toMin(t2) <= toMin(t1)) return showErr("Time ended must be later than time started.");
-  for (const q of ["hasAccount","accessedPlatform","downloadedMaterials","hasLogin","enrolled","willCascade"])
-    if (!radio(q)) return showErr("Please answer all the Yes/No questions.");
-  if (!$("viewers").value) return showErr("Please enter how many in your school watched.");
   const devices = [...document.querySelectorAll('input[name="devices"]:checked')].map(x => x.value);
-  if (!devices.length) return showErr("Please select how you watched.");
-  if (devices.includes("As a group") && !$("grpSize").value) return showErr("Please enter how many were in your group.");
-  if (!hasInk) return showErr("Please draw or upload your signature.");
+  for (let n = 1; n <= 4; n++){ const m = validateStep(n); if (m){ goStep(n); return showErr(m); } }
 
   const x = computeDay(t1, t2);
   current = {
@@ -488,6 +501,47 @@ $("aPrint").onclick = async () => {
   b.disabled = false; b.textContent = old;
 };
 $("aCsv").onclick = () => { const rs = aFiltered(); if(!rs.length) return aErr("No records to download."); downloadCsv("GBF-ClassBuilder-responses.csv", CSV_HEAD, rs.map(csvRow)); };
+
+/* ---------- step-by-step pages (inputs stay filled when going back) ---------- */
+const STEPS = 4, STEP_NAMES = ["Your attendance","Your account","How you watched","Your signature"];
+let step = 1;
+function validateStep(n){
+  if (n===1){
+    if (!$("name").value.trim() || !$("school").value.trim() || !$("date").value || !$("t1").value || !$("t2").value)
+      return "Please complete your name, school, date, and time started and ended.";
+    if (toMin($("t2").value) <= toMin($("t1").value)) return "Time ended must be later than time started.";
+  }
+  if (n===2){
+    for (const q of ["hasAccount","accessedPlatform","downloadedMaterials","hasLogin","enrolled","willCascade"])
+      if (!radio(q)) return "Please answer all the Yes/No questions.";
+  }
+  if (n===3){
+    if (!$("viewers").value) return "Please enter how many in your school watched.";
+    const dv = [...document.querySelectorAll('input[name="devices"]:checked')].map(x => x.value);
+    if (!dv.length) return "Please select how you watched.";
+    if (dv.includes("As a group") && !$("grpSize").value) return "Please enter how many were in your group.";
+  }
+  if (n===4 && !hasInk) return "Please draw or upload your signature.";
+  return "";
+}
+function goStep(n){
+  step = n; showErr("");
+  document.querySelectorAll(".step").forEach(c => c.classList.toggle("active", +c.dataset.step === n));
+  document.querySelectorAll("#progress i").forEach((b,i) => b.classList.toggle("on", i < n));
+  $("stepInfo").textContent = "Step " + n + " of " + STEPS + " – " + STEP_NAMES[n-1];
+  $("backBtn").style.visibility = n === 1 ? "hidden" : "visible";
+  $("nextBtn").classList.toggle("hidden", n === STEPS);
+  $("submitBtn").classList.toggle("hidden", n !== STEPS);
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+$("nextBtn").onclick = () => { const m = validateStep(step); if (m) return showErr(m); goStep(step+1); };
+$("backBtn").onclick = () => goStep(step-1);
+$("form").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.tagName === "INPUT" && step < STEPS){ e.preventDefault(); $("nextBtn").click(); }
+});
+const _again = $("again").onclick;
+$("again").onclick = () => { _again(); goStep(1); };
+goStep(1);
 </script>
 </body>
 </html>
