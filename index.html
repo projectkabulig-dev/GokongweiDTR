@@ -19,7 +19,7 @@ main{max-width:760px;margin:-14px auto 40px;padding:0 14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
 .card h2{margin:0 0 12px;font-size:1.1rem;color:var(--primary)}
 label{display:block;font-weight:600;margin:12px 0 4px;font-size:.95rem}
-input[type=text],input[type=date],input[type=time],input[type=number],select{
+input[type=text],input[type=password],input[type=date],input[type=time],input[type=number],select{
   width:100%;padding:11px 12px;border:1px solid #b9c8ce;border-radius:8px;font-size:1rem;background:#fff;color:var(--ink)}
 input:focus,select:focus,button:focus-visible{outline:3px solid #9fd3df;outline-offset:1px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -86,6 +86,8 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
 .nav{justify-content:space-between}
 .nav .spacer{flex:1}
 #batch{display:none}
+dialog{border:0;border-radius:12px;padding:18px;width:92%;max-width:420px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(10,30,40,.5)}
 .foot{text-align:center;font-size:.85rem;margin-top:8px}
 @media print{
   body{background:#fff}
@@ -271,13 +273,29 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
       <p class="hint">In the print window choose "Save as PDF" to download, or send it to your printer. Set paper to A4, margins Default, and scale 100% in the print window.</p>
     </div>
     <div class="actions"><button class="btn alt" id="aBack" type="button">Back to form</button></div>
+
+    <dialog id="editDlg">
+      <h2 style="margin:0 0 6px;color:var(--primary);font-size:1.1rem">Edit DTR record</h2>
+      <label for="eName">Full name</label><input id="eName" type="text">
+      <label for="eSchool">School</label><input id="eSchool" type="text">
+      <label for="eDate">Date attended</label><input id="eDate" type="date">
+      <div class="row">
+        <div><label for="eT1">Time started</label><input id="eT1" type="time"></div>
+        <div><label for="eT2">Time ended</label><input id="eT2" type="time"></div>
+      </div>
+      <div class="err" id="eErr"></div>
+      <div class="actions">
+        <button class="btn" id="eSave" type="button">Save changes</button>
+        <button class="btn alt" id="eCancel" type="button">Cancel</button>
+      </div>
+    </dialog>
   </section>
 </main>
 <div id="batch"></div>
 
 <script>
 /* ============ SETTINGS (edit these) ============ */
-const SCRIPT_URL   = "https://script.google.com/macros/s/AKfycbxNrztUpLxGhgAJ4pgSlSWhDUvQgtQsFffYFBOWLPF-MFWoahjmN1hv6CSUy9foKUAo/exec";
+const SCRIPT_URL   = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 const SIGNATORY    = "Rogelio B. Candido Jr.";
 const SIGNATORY_POS= "Education Program Supervisor I, SDO Romblon";
 const ACTIVITY     = "Online Orientation on GBF Class Builder";
@@ -495,8 +513,8 @@ function aFiltered(){
 function aRender(){
   const rs = aFiltered();
   $("aCount").textContent = rs.length + " record" + (rs.length===1?"":"s");
-  $("aTable").innerHTML = `<tr><th></th><th>Name</th><th>School</th><th>Date</th><th>Time</th><th>Hrs</th></tr>` +
-    rs.map(r => `<tr><td><input type="checkbox" class="aSel" value="${esc(r.id)}"></td><td>${esc(r.name)}</td><td>${esc(r.school)}</td><td>${esc(r.date)}</td><td>${esc(r.timeStart)}–${esc(r.timeEnd)}</td><td>${esc(r.totalHours)}</td></tr>`).join("");
+  $("aTable").innerHTML = `<tr><th></th><th>Name</th><th>School</th><th>Date</th><th>Time</th><th>Hrs</th><th></th></tr>` +
+    rs.map(r => `<tr><td><input type="checkbox" class="aSel" value="${esc(r.id)}"></td><td>${esc(r.name)}</td><td>${esc(r.school)}</td><td>${esc(r.date)}</td><td>${esc(r.timeStart)}–${esc(r.timeEnd)}</td><td>${esc(r.totalHours)}</td><td><button type="button" class="btn alt aEdit" data-id="${esc(r.id)}" style="padding:6px 12px">Edit</button></td></tr>`).join("");
   $("aAll").checked = false;
 }
 $("aSearch").oninput = aRender; $("aDate").onchange = aRender;
@@ -562,6 +580,33 @@ $("form").addEventListener("keydown", e => {
 const _again = $("again").onclick;
 $("again").onclick = () => { _again(); goStep(1); };
 goStep(1);
+
+/* ---------- admin: edit a record ---------- */
+let editId = null;
+$("aTable").addEventListener("click", e => {
+  const b = e.target.closest(".aEdit"); if (!b) return;
+  const r = aRows.find(x => x.id === b.dataset.id); if (!r) return;
+  editId = r.id;
+  $("eName").value = r.name; $("eSchool").value = r.school; $("eDate").value = r.date;
+  $("eT1").value = r.start24; $("eT2").value = r.end24; $("eErr").style.display = "none";
+  $("editDlg").showModal();
+});
+$("eCancel").onclick = () => $("editDlg").close();
+$("eSave").onclick = async () => {
+  const err = m => { $("eErr").textContent = m; $("eErr").style.display = "block"; };
+  const name = $("eName").value.trim(), school = $("eSchool").value.trim(), date = $("eDate").value, t1 = $("eT1").value, t2 = $("eT2").value;
+  if (!name || !school || !date || !t1 || !t2) return err("Please complete all fields.");
+  if (toMin(t2) <= toMin(t1)) return err("Time ended must be later than time started.");
+  const x = computeDay(t1, t2);
+  const upd = {name, school, date, start24:t1, end24:t2, timeStart:fmt12(t1), timeEnd:fmt12(t2), totalHours:+(x.minutes/60).toFixed(2)};
+  const b = $("eSave"); b.disabled = true; b.textContent = "Saving…";
+  try {
+    const j = await api({action:"update", pin:aPin, id:editId, ...upd});
+    if (!j.ok) err(j.error || "Could not save.");
+    else { Object.assign(aRows.find(r => r.id === editId), upd); aRender(); $("editDlg").close(); }
+  } catch(e){ err("Network error. Try again."); }
+  b.disabled = false; b.textContent = "Save changes";
+};
 </script>
 </body>
 </html>
