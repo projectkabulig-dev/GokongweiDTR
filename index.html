@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service Credit – GBF Class Builder Orientation</title>
+<style>
+:root{
+  --ink:#10222b; --muted:#5b6f78; --line:#d6e0e4; --bg:#f2f7f8; --card:#ffffff;
+  --primary:#0f4c5c; --primary-2:#16798f; --accent:#f2a900; --ok:#1b7f5a; --warn:#b3261e;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+header{background:var(--primary);color:#fff;padding:22px 16px 26px}
+header .in{max-width:760px;margin:0 auto}
+header h1{margin:0 0 4px;font-size:1.45rem}
+header p{margin:0;opacity:.85;font-size:.95rem}
+main{max-width:760px;margin:-14px auto 40px;padding:0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:1.1rem;color:var(--primary)}
+label{display:block;font-weight:600;margin:12px 0 4px;font-size:.95rem}
+input[type=text],input[type=date],input[type=time],input[type=number],select{
+  width:100%;padding:11px 12px;border:1px solid #b9c8ce;border-radius:8px;font-size:1rem;background:#fff;color:var(--ink)}
+input:focus,select:focus,button:focus-visible{outline:3px solid #9fd3df;outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+.q{padding:10px 0;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.q p{margin:0 0 6px;font-weight:600;font-size:.95rem}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opts label{margin:0;font-weight:500;display:flex;align-items:center;gap:6px;border:1px solid #b9c8ce;border-radius:999px;padding:7px 14px;cursor:pointer;background:#fff}
+.opts label:has(input:checked){background:var(--primary);color:#fff;border-color:var(--primary)}
+.opts input{accent-color:var(--accent)}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18px;cursor:pointer}
+.btn{background:var(--primary);color:#fff}
+.btn:hover{background:var(--primary-2)}
+.btn.alt{background:#fff;color:var(--primary);border:1px solid var(--primary)}
+.btn.gold{background:var(--accent);color:#2a1f00}
+.btn[disabled]{opacity:.6;cursor:wait}
+.err{color:var(--warn);font-weight:600;margin-top:10px;display:none}
+.hint{color:var(--muted);font-size:.85rem;margin:4px 0 0}
+.info{border-left:5px solid var(--accent);background:#fff8e6;padding:12px 14px;border-radius:8px;margin:10px 0;font-size:.95rem}
+.info.ok{border-color:var(--ok);background:#eaf7f1}
+.info code{background:#fff;border:1px dashed #999;padding:2px 8px;border-radius:6px;font-weight:700}
+.hidden{display:none!important}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+/* DTR (CSC Form 48 style, half A4 lengthwise) */
+.dtr-wrap{overflow-x:auto}
+.dtr{width:100%;max-width:520px;margin:0 auto;background:#fff;color:#000;font-family:"Times New Roman",serif;font-size:11px;padding:8px}
+.dtr .f48{font-size:10px;font-style:italic}
+.dtr h3{text-align:center;margin:2px 0;font-size:15px;letter-spacing:.5px}
+.dtr .ctr{text-align:center}
+.dtr .name{text-align:center;font-weight:bold;font-size:13px;border-bottom:1px solid #000;margin:6px 24px 0;padding-bottom:1px}
+.dtr .cap{text-align:center;font-size:9px}
+.dtr table{width:100%;border-collapse:collapse;margin-top:4px}
+.dtr th,.dtr td{border:1px solid #000;padding:1px 3px;text-align:center;font-size:10px;height:14px}
+.dtr td.l{text-align:left}
+.dtr .tot td{font-weight:bold}
+.dtr .cert{font-size:10px;margin-top:6px;text-align:justify}
+.dtr .sig{margin:14px 40px 0;text-align:center}
+.dtr .sig b{display:block;border-top:1px solid #000;padding-top:2px;font-size:12px}
+.dtr .note{font-size:9px;text-align:center;margin-top:4px;font-style:italic}
+
+.resp-sheet{font-size:.95rem}
+.resp-sheet table{width:100%;border-collapse:collapse}
+.resp-sheet td{border-bottom:1px solid var(--line);padding:7px 4px;vertical-align:top}
+.resp-sheet td:first-child{width:58%;color:var(--muted)}
+
+.sigpad-wrap{border:2px dashed #8fb0ba;border-radius:10px;background:#fff;touch-action:none}
+#sigPad{display:block;width:100%;height:auto;aspect-ratio:3/1;touch-action:none;cursor:crosshair}
+.dtr .sigimg{display:block;margin:0 auto -8px;height:44px;max-width:170px;object-fit:contain;mix-blend-mode:multiply}
+.dtr .sigimg.short{height:30px}
+.dtr .sig span{font-size:9px}
+#aTable{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}
+#aTable th,#aTable td{border-bottom:1px solid var(--line);padding:7px 5px;text-align:left}
+#aTable th{color:var(--muted);font-weight:600}
+.filters{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+@media(max-width:520px){.filters{grid-template-columns:1fr}}
+#batch{display:none}
+.foot{text-align:center;font-size:.85rem;margin-top:8px}
+@media print{
+  body{background:#fff}
+  header,#admin,#form,#batch,.no-print,.foot{display:none!important}
+  body.print-dtr #result>:not(#dtrCard),body.print-resp #result>:not(#respCard){display:none!important}
+  body.print-batch main{display:none!important}
+  body.print-batch #batch{display:grid!important;grid-template-columns:98mm 98mm;gap:6mm;align-items:start}
+  body.print-batch #batch .dtr{break-inside:avoid;margin:0}
+  main{margin:0;padding:0;max-width:none}
+  .card{border:0;padding:0;margin:0}
+  .dtr{max-width:none!important;width:98mm;margin:0}
+  @page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="in">
+    <h1>Service Credit &amp; DTR</h1>
+    <p>Online Orientation on GBF Class Builder – for teachers who attended</p>
+  </div>
+</header>
+
+<main>
+  <!-- STEP 1: FORM -->
+  <form id="form" novalidate>
+    <div class="card">
+      <h2>Your attendance</h2>
+      <label for="name">Full name</label>
+      <input id="name" type="text" placeholder="e.g., Juan D. Dela Cruz" autocomplete="name">
+      <label for="school">School</label>
+      <input id="school" type="text" placeholder="Name of school">
+      <label for="date">Date you attended</label>
+      <input id="date" type="date">
+      <div class="row">
+        <div><label for="t1">Time started</label><input id="t1" type="time"></div>
+        <div><label for="t2">Time ended</label><input id="t2" type="time"></div>
+      </div>
+      <p class="hint">Enter the actual time you joined and left the orientation.</p>
+    </div>
+
+    <div class="card">
+      <h2>Quick questions</h2>
+
+      <div class="q"><p>Do you have a GBF Class Builder account?</p>
+        <div class="opts"><label><input type="radio" name="hasAccount" value="Yes">Yes</label><label><input type="radio" name="hasAccount" value="No">No</label></div></div>
+
+      <div class="q"><p>Have you accessed the GBF Class Builder platform?</p>
+        <div class="opts"><label><input type="radio" name="accessedPlatform" value="Yes">Yes</label><label><input type="radio" name="accessedPlatform" value="No">No</label></div></div>
+
+      <div class="q"><p>Have you downloaded the materials?</p>
+        <div class="opts"><label><input type="radio" name="downloadedMaterials" value="Yes">Yes</label><label><input type="radio" name="downloadedMaterials" value="No">No</label></div></div>
+
+      <div class="q"><p>Do you have a log-in account?</p>
+        <div class="opts"><label><input type="radio" name="hasLogin" value="Yes">Yes</label><label><input type="radio" name="hasLogin" value="No">No</label></div></div>
+
+      <div class="q"><p>Is your account enrolled?</p>
+        <div class="opts"><label><input type="radio" name="enrolled" value="Yes">Yes</label><label><input type="radio" name="enrolled" value="No">No</label></div></div>
+
+      <div class="q"><p>Are you willing to cascade what you learned?</p>
+        <div class="opts"><label><input type="radio" name="willCascade" value="Yes">Yes</label><label><input type="radio" name="willCascade" value="No">No</label></div></div>
+
+      <div class="q"><p>How many in your school watched the orientation?</p>
+        <input id="viewers" type="number" min="1" inputmode="numeric" placeholder="Number of viewers"></div>
+
+      <div class="q"><p>How did you watch? (select all that apply)</p>
+        <div class="opts">
+          <label><input type="checkbox" name="devices" value="Laptop">Laptop</label>
+          <label><input type="checkbox" name="devices" value="Cellphone">Cellphone</label>
+          <label><input type="checkbox" name="devices" value="TV">TV</label>
+          <label><input type="checkbox" name="devices" value="As a group" id="grpBox">As a group</label>
+        </div>
+        <div id="grpWrap" class="hidden" style="margin-top:10px">
+          <label for="grpSize" style="margin-top:0">How many were in your group?</label>
+          <input id="grpSize" type="number" min="2" inputmode="numeric" placeholder="Group size">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <h2>Your signature</h2>
+      <p class="hint" style="margin:0 0 8px">Sign inside the box using your finger or mouse, or upload a photo of your signature. It will appear on your DTR.</p>
+      <div class="sigpad-wrap"><canvas id="sigPad" width="600" height="200"></canvas></div>
+      <div class="actions">
+        <button type="button" class="btn alt" id="sigClear">Clear signature</button>
+        <label class="btn alt" style="margin:0;cursor:pointer;display:inline-block">Upload signature photo<input id="sigFile" type="file" accept="image/*" hidden></label>
+      </div>
+      <div class="err" id="err"></div>
+      <div class="actions"><button class="btn gold" id="submitBtn" type="submit">Submit and generate my DTR</button></div>
+    </div>
+  </form>
+
+  <!-- STEP 2: RESULT -->
+  <div id="result" class="hidden">
+    <div class="card" id="dtrCard">
+      <h2 class="no-print">Your service credit DTR</h2>
+      <p class="hint no-print" id="saveStatus"></p>
+      <div class="dtr-wrap"><div class="dtr" id="dtr"></div></div>
+      <div class="actions no-print">
+        <button class="btn" id="printDtr">Print DTR (A4)</button>
+      </div>
+    </div>
+
+    <div class="card no-print" id="nextCard">
+      <h2>Next steps for GBF Class Builder</h2>
+      <div id="infoNoAccount" class="info hidden">
+        You don't have an account yet? Open this link to create and enroll your account:<br>
+        <a id="enrollLink" target="_blank" rel="noopener"></a>
+      </div>
+      <div id="infoEnrolled" class="info ok hidden">
+        Already enrolled? Go to <a id="siteLink" target="_blank" rel="noopener"></a> and log in with the password:
+        <code id="pw"></code>
+      </div>
+    </div>
+
+    <div class="card no-print" id="askDl">
+      <h2>Download your responses?</h2>
+      <div class="opts">
+        <label><input type="radio" name="wantDl" value="Yes">Yes, I want a copy</label>
+        <label><input type="radio" name="wantDl" value="No">No, thanks</label>
+      </div>
+      <div class="actions hidden" id="dlBtns">
+        <button class="btn" id="dlPdf">Download as PDF</button>
+        <button class="btn alt" id="dlCsv">Download as CSV</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="respCard">
+      <h2>Your responses – Online Orientation on GBF Class Builder</h2>
+      <div class="resp-sheet" id="respSheet"></div>
+    </div>
+
+    <div class="actions"><button class="btn alt" id="again">Submit another teacher</button></div>
+  </div>
+
+  <p class="foot" id="footLink"><a href="#admin">Admin</a></p>
+
+  <section id="admin" class="hidden">
+    <div class="card">
+      <h2>Admin: teacher DTRs</h2>
+      <label for="pin">Admin PIN</label>
+      <input id="pin" type="password" autocomplete="off" placeholder="Enter PIN">
+      <div class="actions"><button class="btn" id="aLoad" type="button">Load records</button></div>
+      <div class="err" id="aErr"></div>
+    </div>
+    <div class="card hidden" id="aList">
+      <div class="filters">
+        <div><label for="aSearch" style="margin-top:0">Search name or school</label><input id="aSearch" type="text"></div>
+        <div><label for="aDate" style="margin-top:0">Date attended</label><input id="aDate" type="date"></div>
+      </div>
+      <div class="actions" style="align-items:center">
+        <label style="margin:0;display:flex;gap:6px;align-items:center;font-weight:500"><input type="checkbox" id="aAll"> Select all</label>
+        <span class="hint" id="aCount" style="margin:0"></span>
+      </div>
+      <div style="overflow-x:auto"><table id="aTable"></table></div>
+      <div class="actions">
+        <button class="btn gold" id="aPrint" type="button">Print / save selected DTRs (with signatures)</button>
+        <button class="btn alt" id="aCsv" type="button">Download responses (CSV)</button>
+      </div>
+      <p class="hint">In the print window choose "Save as PDF" to download, or send it to your printer. Two DTRs print per A4 page.</p>
+    </div>
+    <div class="actions"><button class="btn alt" id="aBack" type="button">Back to form</button></div>
+  </section>
+</main>
+<div id="batch"></div>
+
+<script>
+/* ============ SETTINGS (edit these) ============ */
+const SCRIPT_URL   = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const SIGNATORY    = "Rogelio B. Candido Jr.";
+const SIGNATORY_POS= "Education Program Supervisor I, SDO Romblon";
+const ACTIVITY     = "Online Orientation on GBF Class Builder";
+const ENROLL_LINK  = "https://bit.ly/GBFCBAccountEnrollment2026";
+const SITE_LINK    = "https://gbfclassbuilder.com";
+const SITE_PASSWORD= "gbfclassbuilder2026";
+const LUNCH_OUT = "12:00", LUNCH_IN = "13:00";
+/* ================================================ */
+
+const $ = id => document.getElementById(id);
+const live = () => SCRIPT_URL.startsWith("http");
+let current = null, resultShown = false;
+
+$("enrollLink").textContent = ENROLL_LINK; $("enrollLink").href = ENROLL_LINK;
+$("siteLink").textContent = "gbfclassbuilder.com"; $("siteLink").href = SITE_LINK;
+$("pw").textContent = SITE_PASSWORD;
+
+const radio = n => (document.querySelector(`input[name="${n}"]:checked`) || {}).value || "";
+const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60+m; };
+const fmt12 = t => { if(!t) return ""; let [h,m] = t.split(":").map(Number); const ap = h>=12?"PM":"AM"; h = h%12||12; return h+":"+String(m).padStart(2,"0")+" "+ap; };
+const hrsText = mins => { const h = Math.floor(mins/60), m = mins%60; return h+" hr"+(h===1?"":"s")+(m?" "+m+" min":""); };
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const MONTHS = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+
+$("grpBox").addEventListener("change", e => $("grpWrap").classList.toggle("hidden", !e.target.checked));
+document.querySelectorAll('input[name="wantDl"]').forEach(r => r.addEventListener("change", () =>
+  $("dlBtns").classList.toggle("hidden", radio("wantDl") !== "Yes")));
+
+/* ---------- time split for the DTR ---------- */
+function computeDay(t1, t2){
+  const s = toMin(t1), e = toMin(t2), noon = 720, lo = toMin(LUNCH_OUT), li = toMin(LUNCH_IN);
+  if (e <= noon || e <= li && s < noon) return {amIn:t1, amOut:t2, pmIn:"", pmOut:"", minutes:e-s};
+  if (s >= noon) return {amIn:"", amOut:"", pmIn:t1, pmOut:t2, minutes:e-s};
+  return {amIn:t1, amOut:LUNCH_OUT, pmIn:LUNCH_IN, pmOut:t2, minutes:(lo-s)+(e-li)};
+}
+
+/* ---------- DTR markup (used by teacher view and admin batch print) ---------- */
+function dtrHTML(d, sig){
+  const dt = new Date(d.date+"T00:00:00");
+  const y = dt.getFullYear(), m = dt.getMonth(), day = dt.getDate(), dim = new Date(y, m+1, 0).getDate();
+  const x = computeDay(d.start24, d.end24);
+  let rows = "";
+  for (let i=1;i<=31;i++){
+    if (i>dim){ rows += `<tr><td>${i}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`; continue; }
+    const wd = new Date(y,m,i).getDay();
+    if (i===day){
+      rows += `<tr><td>${i}</td><td>${fmt12(x.amIn)}</td><td>${fmt12(x.amOut)}</td><td>${fmt12(x.pmIn)}</td><td>${fmt12(x.pmOut)}</td><td>${Math.floor(x.minutes/60)}</td><td>${x.minutes%60}</td></tr>`;
+    } else if (wd===0 || wd===6){
+      rows += `<tr><td>${i}</td><td colspan="6" style="color:#555">${wd===6?"SATURDAY":"SUNDAY"}</td></tr>`;
+    } else rows += `<tr><td>${i}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  }
+  const sigTag = sig ? `<img class="sigimg" alt="signature" src="${sig}">` : `<div class="sigimg"></div>`;
+  return `
+    <div class="f48">Civil Service Form No. 48</div>
+    <h3>DAILY TIME RECORD</h3>
+    <div class="name">${esc(String(d.name).toUpperCase())}</div>
+    <div class="cap">(Name)</div>
+    <div class="ctr" style="margin-top:4px">For the month of <b>${MONTHS[m]} ${y}</b></div>
+    <div class="ctr">Station: <b>${esc(d.school)}</b></div>
+    <div class="ctr">Service credit for: <b>${ACTIVITY}</b></div>
+    <table>
+      <tr><th rowspan="2">Day</th><th colspan="2">A.M.</th><th colspan="2">P.M.</th><th colspan="2">Undertime</th></tr>
+      <tr><th>Arrival</th><th>Departure</th><th>Arrival</th><th>Departure</th><th>Hours</th><th>Minutes</th></tr>
+      ${rows}
+      <tr class="tot"><td colspan="5" class="l">TOTAL (credited time)</td><td>${Math.floor(x.minutes/60)}</td><td>${x.minutes%60}</td></tr>
+    </table>
+    <div class="cert">I certify on my honor that the above is a true and correct report of the hours of work performed, record of which was made daily at the time of arrival at and departure from office.</div>
+    <div class="sig">${sigTag}<b>${esc(d.name)}</b><span>Employee signature over printed name</span></div>
+    <div class="cert" style="margin-top:6px">Verified as to the prescribed office hours.</div>
+    <div class="sig"><div class="sigimg short"></div><b>${esc(SIGNATORY)}</b><span>${esc(SIGNATORY_POS)}</span></div>
+    <div class="note">Attendance recorded: ${fmt12(d.start24)} to ${fmt12(d.end24)} (${hrsText(x.minutes)}).</div>`;
+}
+
+/* ---------- signature pad ---------- */
+const cv = $("sigPad"), ctx = cv.getContext("2d");
+let drawing = false, hasInk = false, sigKind = "";
+ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#0a1a33";
+const pos = e => { const r = cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height}; };
+cv.addEventListener("pointerdown", e => {
+  drawing = true; cv.setPointerCapture(e.pointerId);
+  const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+.1,p.y+.1); ctx.stroke();
+  hasInk = true; sigKind = "drawn"; e.preventDefault();
+});
+cv.addEventListener("pointermove", e => { if(!drawing) return; const p = pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); });
+["pointerup","pointercancel","pointerleave"].forEach(ev => cv.addEventListener(ev, () => { drawing = false; }));
+function clearPad(){ ctx.clearRect(0,0,cv.width,cv.height); hasInk = false; sigKind = ""; }
+$("sigClear").onclick = clearPad;
+$("sigFile").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0,0,cv.width,cv.height); ctx.fillStyle = "#fff"; ctx.fillRect(0,0,cv.width,cv.height);
+    const sc = Math.min(cv.width/img.width, cv.height/img.height), w = img.width*sc, h = img.height*sc;
+    ctx.drawImage(img,(cv.width-w)/2,(cv.height-h)/2,w,h);
+    hasInk = true; sigKind = "uploaded"; URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f); e.target.value = "";
+};
+const getSig = () => sigKind === "uploaded" ? cv.toDataURL("image/jpeg", 0.8) : cv.toDataURL("image/png");
+
+/* ---------- submit ---------- */
+function showErr(msg){ const e = $("err"); e.textContent = msg; e.style.display = msg ? "block" : "none"; if(msg) e.scrollIntoView({behavior:"smooth",block:"center"}); }
+
+$("form").addEventListener("submit", async ev => {
+  ev.preventDefault(); showErr("");
+  const name = $("name").value.trim(), school = $("school").value.trim(), date = $("date").value, t1 = $("t1").value, t2 = $("t2").value;
+  if (!name || !school || !date || !t1 || !t2) return showErr("Please complete your name, school, date, and time started and ended.");
+  if (toMin(t2) <= toMin(t1)) return showErr("Time ended must be later than time started.");
+  for (const q of ["hasAccount","accessedPlatform","downloadedMaterials","hasLogin","enrolled","willCascade"])
+    if (!radio(q)) return showErr("Please answer all the Yes/No questions.");
+  if (!$("viewers").value) return showErr("Please enter how many in your school watched.");
+  const devices = [...document.querySelectorAll('input[name="devices"]:checked')].map(x => x.value);
+  if (!devices.length) return showErr("Please select how you watched.");
+  if (devices.includes("As a group") && !$("grpSize").value) return showErr("Please enter how many were in your group.");
+  if (!hasInk) return showErr("Please draw or upload your signature.");
+
+  const x = computeDay(t1, t2);
+  current = {
+    name, school, date, start24: t1, end24: t2, timeStart: fmt12(t1), timeEnd: fmt12(t2), totalHours: +(x.minutes/60).toFixed(2),
+    hasAccount: radio("hasAccount"), accessedPlatform: radio("accessedPlatform"),
+    downloadedMaterials: radio("downloadedMaterials"), hasLogin: radio("hasLogin"), enrolled: radio("enrolled"),
+    willCascade: radio("willCascade"), viewersInSchool: $("viewers").value, devices: devices.join(", "),
+    groupSize: devices.includes("As a group") ? $("grpSize").value : "", signature: getSig()
+  };
+
+  const btn = $("submitBtn"); btn.disabled = true; btn.textContent = "Saving…";
+  let saved = false;
+  if (live()) {
+    try { const j = await api(current); saved = !!j.ok; if(!saved) console.warn(j.error); } catch(e){ saved = false; }
+    if (!saved){ btn.disabled = false; btn.textContent = "Submit and generate my DTR";
+      return showErr("Could not save your response. Check your internet connection and try again."); }
+  }
+  btn.disabled = false; btn.textContent = "Submit and generate my DTR";
+  $("saveStatus").textContent = saved ? "Your response and signature were saved." : "Preview mode: the backend link is not set yet, so nothing was saved.";
+  render();
+});
+
+async function api(body){
+  const r = await fetch(SCRIPT_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(body)});
+  return r.json();
+}
+
+function render(){
+  const d = current;
+  $("dtr").innerHTML = dtrHTML(d, d.signature);
+  $("infoNoAccount").classList.toggle("hidden", !(d.hasAccount==="No" || d.hasLogin==="No" || d.enrolled==="No"));
+  $("infoEnrolled").classList.toggle("hidden", !(d.enrolled==="Yes" || d.hasLogin==="Yes"));
+  const rowsR = [
+    ["Name", d.name],["School", d.school],["Date attended", d.date],["Time", d.timeStart+" – "+d.timeEnd],
+    ["Has a GBF Class Builder account", d.hasAccount],["Accessed the platform", d.accessedPlatform],
+    ["Downloaded materials", d.downloadedMaterials],["Has log-in account", d.hasLogin],["Account enrolled", d.enrolled],
+    ["Willing to cascade", d.willCascade],["Viewers in school", d.viewersInSchool],["Watched using", d.devices],
+    ...(d.groupSize ? [["Group size", d.groupSize]] : [])
+  ];
+  $("respSheet").innerHTML = "<table>"+rowsR.map(r=>`<tr><td>${esc(r[0])}</td><td><b>${esc(r[1])}</b></td></tr>`).join("")+"</table>";
+  document.querySelectorAll('input[name="wantDl"]').forEach(r=>r.checked=false); $("dlBtns").classList.add("hidden");
+  resultShown = true; route(); window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function doPrint(cls){
+  document.body.classList.add(cls);
+  if (cls==="print-resp") $("respCard").classList.remove("hidden");
+  window.print();
+  setTimeout(()=>{ document.body.classList.remove(cls); if(cls==="print-resp") $("respCard").classList.add("hidden"); }, 500);
+}
+$("printDtr").onclick = () => doPrint("print-dtr");
+$("dlPdf").onclick = () => doPrint("print-resp");
+
+const q = s => '"'+String(s==null?"":s).replace(/"/g,'""')+'"';
+function downloadCsv(filename, header, rows){
+  const csv = [header, ...rows].map(r => r.map(q).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"})); a.download = filename; a.click();
+}
+const CSV_HEAD = ["Name","School","Date attended","Time start","Time end","Total hours","Has account","Accessed platform","Downloaded materials","Has log-in account","Enrolled","Willing to cascade","Viewers in school","Devices","Group size"];
+const csvRow = d => [d.name,d.school,d.date,d.timeStart,d.timeEnd,d.totalHours,d.hasAccount,d.accessedPlatform,d.downloadedMaterials,d.hasLogin,d.enrolled,d.willCascade,d.viewersInSchool,d.devices,d.groupSize];
+$("dlCsv").onclick = () => downloadCsv("GBF-ClassBuilder-response-"+current.name.replace(/\W+/g,"_")+".csv", CSV_HEAD, [csvRow(current)]);
+
+$("again").onclick = () => { $("form").reset(); clearPad(); $("grpWrap").classList.add("hidden"); resultShown = false; route(); window.scrollTo({top:0}); };
+
+/* ---------- admin ---------- */
+let aRows = [], aPin = "";
+function route(){
+  const admin = location.hash === "#admin";
+  $("admin").classList.toggle("hidden", !admin);
+  $("form").classList.toggle("hidden", admin || resultShown);
+  $("result").classList.toggle("hidden", admin || !resultShown);
+  $("footLink").classList.toggle("hidden", admin);
+}
+window.addEventListener("hashchange", route); route();
+$("aBack").onclick = () => { location.hash = ""; };
+
+function aErr(m){ const e = $("aErr"); e.textContent = m; e.style.display = m ? "block" : "none"; }
+$("aLoad").onclick = async () => {
+  aErr("");
+  if (!live()) return aErr("Set SCRIPT_URL in index.html first.");
+  const pin = $("pin").value.trim(); if(!pin) return aErr("Enter the admin PIN.");
+  const b = $("aLoad"); b.disabled = true; b.textContent = "Loading…";
+  try {
+    const j = await api({action:"list", pin});
+    if (!j.ok) aErr(j.error || "Could not load records.");
+    else { aRows = j.rows.reverse(); aPin = pin; $("aList").classList.remove("hidden"); aRender(); }
+  } catch(e){ aErr("Network error. Try again."); }
+  b.disabled = false; b.textContent = "Load records";
+};
+
+function aFiltered(){
+  const t = $("aSearch").value.trim().toLowerCase(), df = $("aDate").value;
+  return aRows.filter(r => (!t || (r.name+" "+r.school).toLowerCase().includes(t)) && (!df || r.date === df));
+}
+function aRender(){
+  const rs = aFiltered();
+  $("aCount").textContent = rs.length + " record" + (rs.length===1?"":"s");
+  $("aTable").innerHTML = `<tr><th></th><th>Name</th><th>School</th><th>Date</th><th>Time</th><th>Hrs</th></tr>` +
+    rs.map(r => `<tr><td><input type="checkbox" class="aSel" value="${esc(r.id)}"></td><td>${esc(r.name)}</td><td>${esc(r.school)}</td><td>${esc(r.date)}</td><td>${esc(r.timeStart)}–${esc(r.timeEnd)}</td><td>${esc(r.totalHours)}</td></tr>`).join("");
+  $("aAll").checked = false;
+}
+$("aSearch").oninput = aRender; $("aDate").onchange = aRender;
+$("aAll").onchange = e => document.querySelectorAll(".aSel").forEach(c => c.checked = e.target.checked);
+
+$("aPrint").onclick = async () => {
+  aErr("");
+  const ids = [...document.querySelectorAll(".aSel:checked")].map(c => c.value);
+  if (!ids.length) return aErr("Tick at least one teacher.");
+  const b = $("aPrint"); b.disabled = true; const old = b.textContent; b.textContent = "Preparing DTRs…";
+  try {
+    const sigs = {};
+    for (let i=0;i<ids.length;i+=15){
+      const j = await api({action:"sigs", pin:aPin, ids:ids.slice(i,i+15)});
+      if (!j.ok) throw new Error(j.error); Object.assign(sigs, j.sigs);
+    }
+    const byId = Object.fromEntries(aRows.map(r => [r.id, r]));
+    $("batch").innerHTML = ids.map(id => `<div class="dtr">${dtrHTML(byId[id], sigs[id])}</div>`).join("");
+    const imgs = [...$("batch").querySelectorAll("img")];
+    await Promise.all(imgs.map(im => im.complete ? 1 : new Promise(r => { im.onload = im.onerror = r; })));
+    doPrint("print-batch");
+  } catch(e){ aErr("Could not prepare DTRs: "+e.message); }
+  b.disabled = false; b.textContent = old;
+};
+$("aCsv").onclick = () => { const rs = aFiltered(); if(!rs.length) return aErr("No records to download."); downloadCsv("GBF-ClassBuilder-responses.csv", CSV_HEAD, rs.map(csvRow)); };
+</script>
+</body>
+</html>
