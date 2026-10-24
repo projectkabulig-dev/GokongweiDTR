@@ -92,8 +92,11 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
   header,#admin,#form,#batch,.no-print,.foot{display:none!important}
   body.print-dtr #result>:not(#dtrCard),body.print-resp #result>:not(#respCard){display:none!important}
   body.print-batch main{display:none!important}
-  body.print-batch #batch{display:grid!important;grid-template-columns:98mm 98mm;gap:6mm;align-items:start}
-  body.print-batch #batch .dtr{break-inside:avoid;margin:0}
+  body.print-batch #batch{display:block!important}
+  #batch .sheet{display:flex;align-items:flex-start;break-after:page}
+  #batch .sheet:last-child{break-after:auto}
+  #batch .sheet .dtr{width:50%!important;box-sizing:border-box;padding:0 3mm;margin:0}
+  #batch .sheet .dtr+.dtr{border-left:1px dashed #888}
   main{margin:0;padding:0;max-width:none}
   .card{border:0;padding:0;margin:0}
   .dtr{max-width:none!important;width:98mm;margin:0}
@@ -198,7 +201,7 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
       <p class="hint no-print" id="saveStatus"></p>
       <div class="dtr-wrap"><div class="dtr" id="dtr"></div></div>
       <div class="actions no-print">
-        <button class="btn" id="printDtr">Print DTR (A4)</button>
+        <button class="btn" id="printDtr">Print DTR (A4, 2 copies side by side)</button>
       </div>
     </div>
 
@@ -254,11 +257,18 @@ button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18p
         <span class="hint" id="aCount" style="margin:0"></span>
       </div>
       <div style="overflow-x:auto"><table id="aTable"></table></div>
+      <div class="actions" style="align-items:center">
+        <label style="margin:0;font-weight:500">Layout
+          <select id="aLayout" style="width:auto;margin-left:6px">
+            <option value="dup">1 teacher per A4 (2 copies side by side)</option>
+            <option value="two">2 different teachers per A4</option>
+          </select></label>
+      </div>
       <div class="actions">
         <button class="btn gold" id="aPrint" type="button">Print / save selected DTRs (with signatures)</button>
         <button class="btn alt" id="aCsv" type="button">Download responses (CSV)</button>
       </div>
-      <p class="hint">In the print window choose "Save as PDF" to download, or send it to your printer. Two DTRs print per A4 page.</p>
+      <p class="hint">In the print window choose "Save as PDF" to download, or send it to your printer. Set paper to A4, margins Default, and scale 100% in the print window.</p>
     </div>
     <div class="actions"><button class="btn alt" id="aBack" type="button">Back to form</button></div>
   </section>
@@ -426,7 +436,18 @@ function doPrint(cls){
   window.print();
   setTimeout(()=>{ document.body.classList.remove(cls); if(cls==="print-resp") $("respCard").classList.add("hidden"); }, 500);
 }
-$("printDtr").onclick = () => doPrint("print-dtr");
+function sheetsHTML(list, dup){
+  const one = x => `<div class="dtr">${dtrHTML(x.d, x.sig)}</div>`;
+  if (dup) return list.map(x => `<div class="sheet">${one(x)}${one(x)}</div>`).join("");
+  let out = "";
+  for (let i=0;i<list.length;i+=2) out += `<div class="sheet">${one(list[i])}${list[i+1]?one(list[i+1]):""}</div>`;
+  return out;
+}
+const waitImgs = el => Promise.all([...el.querySelectorAll("img")].map(im => im.complete ? 1 : new Promise(r => { im.onload = im.onerror = r; })));
+$("printDtr").onclick = async () => {
+  $("batch").innerHTML = sheetsHTML([{d:current, sig:current.signature}], true);
+  await waitImgs($("batch")); doPrint("print-batch");
+};
 $("dlPdf").onclick = () => doPrint("print-resp");
 
 const q = s => '"'+String(s==null?"":s).replace(/"/g,'""')+'"';
@@ -493,9 +514,8 @@ $("aPrint").onclick = async () => {
       if (!j.ok) throw new Error(j.error); Object.assign(sigs, j.sigs);
     }
     const byId = Object.fromEntries(aRows.map(r => [r.id, r]));
-    $("batch").innerHTML = ids.map(id => `<div class="dtr">${dtrHTML(byId[id], sigs[id])}</div>`).join("");
-    const imgs = [...$("batch").querySelectorAll("img")];
-    await Promise.all(imgs.map(im => im.complete ? 1 : new Promise(r => { im.onload = im.onerror = r; })));
+    $("batch").innerHTML = sheetsHTML(ids.map(id => ({d:byId[id], sig:sigs[id]})), $("aLayout").value === "dup");
+    await waitImgs($("batch"));
     doPrint("print-batch");
   } catch(e){ aErr("Could not prepare DTRs: "+e.message); }
   b.disabled = false; b.textContent = old;
